@@ -1,0 +1,62 @@
+#!/bin/bash
+
+IP=$1
+LOG_FILE=/var/log/ec2watcher.log
+DEFAULT=/etc/default/ec2watcher
+AWS_PROFILE=/etc/aws_profile.conf
+
+if [ -f $AWS_PROFILE ]
+then
+    . $AWS_PROFILE
+fi
+
+if [ -f "$DEFAULT" ]
+then
+    . "$DEFAULT"
+fi
+
+if [ ! -f $LOG_FILE ]
+then
+    touch $LOG_FILE
+fi
+
+if [ ! $AWS_ACCESS_KEY ] || [ ! $AWS_SECRET_KEY ]
+then
+    echo `date +%Y%m%d-%H%M%S` "[$0 $@]: Please cheack your $AWS_PROFILE configuration file. You have a problem with the AWS_ variables" >> $LOG_FILE
+    exit 1;
+fi
+
+if [ ! -f $EC2_BIN/ec2-describe-instances ]
+then
+    echo `date +%Y%m%d-%H%M%S` "[$0 $@]: Please check your ec2 home in $AWS_PROFILE" >> $LOG_FILE
+	echo `date +%Y%m%d-%H%M%S` "[$0 $@]: $EC2_BIN/ec2-describe-instances doesn't exist. Please check your ec2 home in $AWS_PROFILE" >> $LOG_FILE
+	exit 1;
+fi
+
+Check=`ping -t 2 -c 3 $IP>/dev/null ; echo $?`
+
+if [ $Check -eq 1 ]
+then
+
+    GetPrivIP=`$EC2_BIN/ec2-describe-network-interfaces | grep $IP | awk '{print $5}'` 
+    GetInstanceID=`/usr/bin/curl --silent http://169.254.169.254/latest/meta-data/instance-id`
+    GetInterfaceID=`$EC2_BIN/ec2-describe-instances $GetInstanceID | grep eni -m 1 | awk '{print $2;}'` 
+
+    CheckBeforeSwitching=`/sbin/ifconfig | grep -Fqe $GetPrivIP ; echo $?`
+
+    if [ $CheckBeforeSwitching -eq 0 ]
+    then
+        echo `date +%Y%m%d-%H%M%S` "[$0 $@]: IP $IP is not available" >> $LOG_FILE
+        echo `date f+%Y%m%d-%H%M%S` "[$0 $@]: IP $IP is not available" >> $LOG_FILE
+        echo `date +%Y%m%d-%H%M%S` "[$0 $@]: Takeover in progress for $IP to $GetInterfaceID" >> $LOG_FILE
+        $EC2_BIN/ec2-assign-private-ip-addresses -n $GetInterfaceID --secondary-private-ip-address $GetPrivIP --allow-reassignment >> $LOG_FILE
+        echo "Migrating resource $IP to `hostname --fqdn`" | mail -s "Takeover to `hostname --fqdn`" $EC2_MAIL
+        sleep 60
+        exit $?
+    else
+        echo `date +%Y%m%d-%H%M%S` "[$0 $@]: Can't takeover for $IP to $GetInterfaceID because I don't have $GetPrivIP" >> $LOG_FILE
+        echo "Problem occurred for the migration $IP to `hostname --fqdn`. The reason is probably : $GetPrivIP is not owned by server" | mail -s "Takeover to `hostname --fqdn` -- FAILED" $EC2_MAIL
+        exit $CheckBeforeSwitching
+    fi
+
+fi
