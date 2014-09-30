@@ -46,6 +46,7 @@ Edit /etc/default/ec2watcher and change START_DAEMON from no to yes
 ### Instance
 Create one symbolic link by IP public you want to monitor : 
  * ln -s /etc/init.d/ec2watcher /etc/init.d/ec2watcher-11.22.33.44
+ 
 Start this instance
  * ∕etc/init.d/ec2watcher-11.22.33.44 start
 
