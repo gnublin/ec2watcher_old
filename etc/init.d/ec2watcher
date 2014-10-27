@@ -23,10 +23,10 @@ DEFAULT=/etc/default/ec2watcher
 EC2W_HOME=/usr/lib/ec2watcher
 EC2W_DAEMON=$EC2W_HOME/ec2watcher
 
-LOG_FILE=/var/log/ec2watcher.log
-PID_FILE=/var/run/ec2watcher.pid
-
 INST_NAME=`echo $0 | awk -F - '{print $2}'` 
+LOG_FILE=/var/log/ec2watcher-$INST_NAME.log
+PID_FILE=/var/run/ec2watcher-$INST_NAME.pid
+
 INTERVAL=2
 
 if [ -z $INST_NAME ]

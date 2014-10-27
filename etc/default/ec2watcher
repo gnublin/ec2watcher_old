@@ -5,9 +5,5 @@ START_DAEMON=no
 EC2W_HOME=/usr/lib/ec2watcher
 EC2W_DAEMON=$EC2W_HOME/ec2watcher
 
-# Default log file and pid
-LOG_FILE=/var/log/ec2watcher.log
-PID_FILE=/var/run/ec2watcher.pid
-
 # Interval for instance check
 #INTERVAL=2

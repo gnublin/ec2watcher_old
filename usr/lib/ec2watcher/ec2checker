@@ -1,9 +1,10 @@
 #!/bin/bash
 
 IP=$1
-LOG_FILE=/var/log/ec2watcher.log
 DEFAULT=/etc/default/ec2watcher
 AWS_PROFILE=/etc/aws_profile.conf
+
+LOG_FILE=/var/log/ec2watcher-$IP.log
 
 if [ -f $AWS_PROFILE ]
 then
