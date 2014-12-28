@@ -54,3 +54,4 @@ Start this instance
 
 **_you can view what is happening in the log file /var/log/ec2watcher.log (default path)_**
 ### Create your own package
+
